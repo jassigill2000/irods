@@ -51,13 +51,12 @@ def install_os_specific_dependencies_yum():
         'libxml2-devel', 'openssl-devel', 'pam-devel', 'perl-JSON', 'python-devel',
         'python-psutil', 'unixODBC', 'unixODBC-devel', 'zlib-devel',
     ]
+    extract_dir = extract_oci_tar()
+    irods_python_ci_utilities.subprocess_get_output('sudo rpm -i --nodeps {0}/*'.format(extract_dir), shell=True, check_rc=True)
+
     if irods_python_ci_utilities.get_distribution_version_major() == '7':
         packages_to_install.append('mysql++-devel')
     irods_python_ci_utilities.install_os_packages(packages_to_install)
-
-    if irods_python_ci_utilities.get_distribution_version_major() == '6':
-        extract_dir = extract_oci_tar()
-        irods_python_ci_utilities.subprocess_get_output('sudo rpm -i --nodeps {0}/*'.format(extract_dir), shell=True, check_rc=True)
 
 def extract_oci_tar():
     with tempfile.NamedTemporaryFile() as f:
@@ -76,8 +75,7 @@ def build_irods(irods_source_dir, debug_build):
         'sudo ./packaging/build.sh {0} resource postgres 2>&1 | tee ./build/build_resource_psql.out; exit $PIPESTATUS'.format(build_flags), cwd=irods_source_dir, shell=True, check_rc=True)
     irods_python_ci_utilities.subprocess_get_output(
         'sudo ./packaging/build.sh {0} icat mysql 2>&1 | tee ./build/build_icat_mysql.out; exit $PIPESTATUS'.format(build_flags), cwd=irods_source_dir, shell=True, check_rc=True)
-    if should_build_oracle_plugin():
-        build_oracle_plugin(irods_source_dir, build_flags)
+    build_oracle_plugin(irods_source_dir, build_flags)
 
 def should_build_oracle_plugin():
     if irods_python_ci_utilities.get_distribution() == 'Ubuntu':
@@ -88,7 +86,7 @@ def should_build_oracle_plugin():
 
 def build_oracle_plugin(irods_source_dir, build_flags):
     irods_python_ci_utilities.subprocess_get_output(
-        'sudo ./packaging/build.sh {0} icat oracle 2>&1 | tee ./build/build_icat_oracle.out; exit $PIPESTATUS'.format(build_flags), cwd=irods_source_dir, shell=True, check_rc=True)
+        'sudo ./packaging/build.sh -rf icat oracle 2>&1 | tee ./build/build_icat_oracle.out; exit $PIPESTATUS'.format(build_flags), cwd=irods_source_dir, shell=True, check_rc=True)
 
 def copy_output_packages(irods_source_dir, output_root_directory):
     irods_python_ci_utilities.mkdir_p(output_root_directory)
