@@ -10,6 +10,7 @@ import logging
 import optparse
 import os
 import subprocess
+from subprocess import Popen, PIPE
 import sys
 
 if sys.version_info < (2, 7):
@@ -128,11 +129,24 @@ if __name__ == '__main__':
         parser.print_help()
         sys.exit(0)
 
+    proc = subprocess.Popen(['whoami'], stdout=PIPE, stderr=PIPE)
+    _out, _err = proc.communicate()
+    print(_out)
+
+    proc0 = Popen(['ls', '-al', '/var/lib/irods'], stdout=PIPE, stderr=PIPE)
+    _out0, _err0 = proc0.communicate()
+    print(_out0)
+
     univmss_testing = os.path.join(IrodsConfig().irods_directory, 'msiExecCmd_bin', 'univMSSInterface.sh')
     if not os.path.exists(univmss_testing):
         univmss_template = os.path.join(IrodsConfig().irods_directory, 'msiExecCmd_bin', 'univMSSInterface.sh.template')
         with open(univmss_template) as f:
             univmss_contents = f.read().replace('template-','')
+
+        proc1 = Popen(['ls', '-al', '/var/lib/irods/msiExecCmd_bin'], stdout=PIPE, stderr=PIPE)
+        _out1, _err1 = proc1.communicate()
+        print(_out1)
+
         with open(univmss_testing, 'w') as f:
             f.write(univmss_contents)
         os.chmod(univmss_testing, 0o544)
